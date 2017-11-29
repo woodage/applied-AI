@@ -55,11 +55,15 @@ class Cluster:
     def __init__(self):
         self.nearDataT = []
         self.centroid = []
+        self.seasons = []
+        self.dates = []
     def add(self, dataTrow):
         self.nearDataT.append(dataTrow)
 
 # Returns Cluster(s) depending on the given centroids and K
 def KmeansClustering(centroids, K):
+    # List of clusters.
+    clusters = [Cluster() for _ in range(K)]
     # Given the centroids in parameters because we want to change the centroids each time.
     def getNewCentroids(centroids):
         for i in range(len(dataT)):
@@ -76,23 +80,26 @@ def KmeansClustering(centroids, K):
             #  Calculate cluster average data row. Next we append in a list for a new centroid.
             newCentroids.append([sum(x) / len(cluster.nearDataT) for x in list(zip(*cluster.nearDataT))])
         return newCentroids
-    # List of clusters.
-    clusters = [Cluster() for _ in range(K)]
     # Variable to control the While loop.
     canClusterBeChanged = True
     # Stop when non of the cluster assignments change.
     while canClusterBeChanged:
         canClusterBeChanged = False
         for i in range(len(centroids)):
-            # We need to calculate the centroids again when they are not equal.
+            # We need to calculate the centroids again while they are not equal.
             if [list(map(int, centroid)) for centroid in centroids][i] != [list(map(int, centroid)) for centroid in getNewCentroids(centroids)][i]:
+                # List of clusters.
+                clusters = [Cluster() for _ in range(K)]
                 centroids = getNewCentroids(centroids)
                 canClusterBeChanged = True
+        clusters = [Cluster() for _ in range(K)]
+        centroids = getNewCentroids(centroids)
     return clusters
 
 # Amount of clusters.
-K = 2
+K = 4
 # List of centroids we will use. The amount of elements is based on K. Indexes can be random.
-beginCentroids = [dataV[24], dataV[60]]
+beginCentroids = [dataV[random.randint(0, len(dataV) - 1)] for _ in range(0, K)]
 for finalCluster in KmeansClustering(beginCentroids, K):
     print(finalCluster.centroid)
+    print(len(finalCluster.nearDataT))
