@@ -2,6 +2,7 @@ __author__ = 'robbie'
 
 import numpy as np
 import random
+from collections import Counter
 
 dataT = np.genfromtxt ('dataset1.csv',delimiter =';', usecols =[1 ,2 ,3 ,4 ,5 ,6 ,7])
 for ele in dataT:
@@ -57,8 +58,12 @@ class Cluster:
         self.centroid = []
         self.seasons = []
         self.dates = []
-    def add(self, dataTrow):
+    def addData(self, dataTrow):
         self.nearDataT.append(dataTrow)
+    def addSeason(self, season):
+        self.seasons.append(season)
+    def addDate(self, date):
+        self.dates.append(date)
 
 # Returns Cluster(s) depending on the given centroids and K
 def KmeansClustering(centroids, K):
@@ -73,7 +78,9 @@ def KmeansClustering(centroids, K):
                 centroidDistances.append(calculateDistance(dataT[i], centroid))
             # Find nearest centroid distance and assign to cluster.
             clusters[centroidDistances.index(min(centroidDistances))].centroid = centroids[centroidDistances.index(min(centroidDistances))]
-            clusters[centroidDistances.index(min(centroidDistances))].add(dataT[i])
+            clusters[centroidDistances.index(min(centroidDistances))].addData(dataT[i])
+            clusters[centroidDistances.index(min(centroidDistances))].addDate(datesT[i])
+            clusters[centroidDistances.index(min(centroidDistances))].addSeason(labelsT[i])
         # New possible centroids.
         newCentroids = []
         for cluster in clusters:
@@ -101,5 +108,5 @@ K = 4
 # List of centroids we will use. The amount of elements is based on K. Indexes can be random.
 beginCentroids = [dataV[random.randint(0, len(dataV) - 1)] for _ in range(0, K)]
 for finalCluster in KmeansClustering(beginCentroids, K):
-    print(finalCluster.centroid)
-    print(len(finalCluster.nearDataT))
+    c = Counter(finalCluster.seasons)
+    print(c.most_common(1)[0][0])
