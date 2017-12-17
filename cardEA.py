@@ -4,9 +4,10 @@ import random
 from functools import reduce
 TARGET_PILE_0 = 36
 TARGET_PILE_1 = 360
-AMOUNT_GENERATIONS = 100
-AMOUNT_INDIVIDUALS = 7
-def rouletteWheelSelection(divides):
+AMOUNT_GENERATIONS = 1000
+AMOUNT_INDIVIDUALS = 30
+
+def rouletteWheelSelection(individuals):
     pass
 
 def truncateSelection(individuals, topXIndividuals, cards):
@@ -16,11 +17,11 @@ def truncateSelection(individuals, topXIndividuals, cards):
     selection = []
     for _ in range(topXIndividuals):
         for individual in individuals:
-            # Check if the fenotype is the best fitnessResult. (Lower is better..)
+            # Check if the getPhenotype is the best fitnessResult. (Lower is better..)
             if fitness(cards, individual) == min(fintessResults):
                 # Add to selection.
                 selection.append(individual)
-                # Remove from result otherwise we get the same fenotype each time.
+                # Remove from result otherwise we get the same getPhenotype each time.
                 fintessResults.remove(min(fintessResults))
                 # Go for next best individual.
                 break
@@ -83,11 +84,11 @@ def crossover(selection, amountcards = 10):
         children.append(child)
     return mutate(children)
 
-def fitness(cards, individual):
+def fitness(cards, individual, test = False):
      # The first pile sum to a number as close as possible to 36.
-    Pile_0 = [cards[i] for i in individual.getFenotype()]
+    Pile_0 = [cards[i] for i in individual.getPhenotype()]
     # The other pile multiply to a number as close as possible to 360.
-    remainingIndexes = list(filter(lambda x: x not in individual.getFenotype(), list(range(len(cards)))))
+    remainingIndexes = list(filter(lambda x: x not in individual.getPhenotype(), list(range(len(cards)))))
     Pile_1 = [cards[i] for i in remainingIndexes]
     # Calculate each pile.
     sumOfPile_0 = sum([card.number for card in Pile_0])
@@ -96,7 +97,7 @@ def fitness(cards, individual):
     else:
         multiplyOfPile_1 = 0
     # Return the amount of distance from the expectation and current result.
-    sum_error = (sumOfPile_0 - TARGET_PILE_0) / TARGET_PILE_0
+    sum_error = ( TARGET_PILE_0 - sumOfPile_0) / TARGET_PILE_0
     multiply_error = (multiplyOfPile_1 - TARGET_PILE_1) / TARGET_PILE_1
     combined_error = abs(sum_error) + abs(multiply_error)
     return combined_error
@@ -117,8 +118,8 @@ class CardsForPile(object):
             self.genes.append([1 for _ in range(0, amountOfOnes)] + [0 for _ in range(0, amountCards - amountOfOnes)])
         self.genotype = self.genes
 
-    # The fenotype will return a list with card indexes that can be assigned to a pile.
-    def getFenotype(self):
+    # The getPhenotype will return a list with card indexes that can be assigned to a pile.
+    def getPhenotype(self):
         results = []
         for i in range(len(self.genotype)):
             # Check if there are more one's then zero's.
@@ -135,6 +136,7 @@ cards = [Card(x) for x in range(1, 11)]
 population = [CardsForPile(len(cards)) for _ in range(AMOUNT_INDIVIDUALS)]
 # Evolve.
 for i in range(AMOUNT_GENERATIONS):
+    print("GENERATION " + str(i) + " with population of " + str(len(population)))
     # Selection of population.
     selection = truncateSelection(population, int(len(population) / 2), cards)
     # Termination. Is goal achieved?
@@ -147,17 +149,23 @@ for i in range(AMOUNT_GENERATIONS):
         del losers[-len(crossover(selection)):]
         # Define new population
         population = selection + mutate(losers) + crossover(selection)
+        if len(population) < AMOUNT_INDIVIDUALS:
+            population += crossover(selection)[AMOUNT_INDIVIDUALS - len(population):]
+        population = population[:AMOUNT_INDIVIDUALS]
     else:
         print("After" + str(i) + " amount of generations, The goal has been achieved.")
         break
 # Get the best fitness of the last generation.
 bestFitness = min([fitness(cards, individu) for individu in population])
+
 # Check wich individu has the best fitness.
 for individu in population:
     if fitness(cards, individu) == bestFitness:
-        print("After " + str(AMOUNT_GENERATIONS) +" amount of generations, The closest individu has fitness off : " + str(fitness(cards, individu)))
-        cardsPile0 = individu.getFenotype()
-        cardsPile1 = list(filter(lambda x: x not in individu.getFenotype(), list(range(1, len(cards) + 1))))
-        print("With cards for pile 0 : " + str(individu.getFenotype()) + " sum("+str(sum(individu.getFenotype()))+")")
-        print("With cards for pile 1 : " + str(cardsPile1) + " multiply(" + str(reduce(lambda x,y: x * y, [cardNumber for cardNumber in cardsPile1])) + ")")
+        print("After " + str(i) +" amount of generations, The closest individu has fitness off : " + str(fitness(cards, individu)))
+        Pile_0 = [cards[i] for i in individu.getPhenotype()]
+        # The other pile multiply to a number as close as possible to 360.
+        remainingIndexes = list(filter(lambda x: x not in individu.getPhenotype(), list(range(len(cards)))))
+        Pile_1 = [cards[i] for i in remainingIndexes]
+        print("With cards for pile 0 : " + str(individu.getPhenotype()) + " sum("+str(sum([sum([card.number for card in Pile_0])]))+")")
+        print("With cards for pile 1 : " + str(remainingIndexes) + " multiply(" + str(reduce(lambda x,y: x * y, [card.number for card in Pile_1])) + ")")
         break
