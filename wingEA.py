@@ -1,5 +1,5 @@
 __author__ = 'robbie'
-# Exercise 6.1 — Card problem
+# Exercise 6.2 — Wingdesign
 import random
 from functools import reduce
 AMOUNT_GENERATIONS = 1000
