@@ -135,6 +135,9 @@ def getBestIndividualFromEA(amount_individuals, amount_generations):
             # Return individual.
             return individual
 
+# Constants for the algorithm.
+AMOUNT_INDIVIDUALS = 40
+AMOUNT_GENERATIONS = 100
 # Make connection.
 conn = sqlite3.connect("cities.db")
 c = conn.cursor()
@@ -142,9 +145,6 @@ c = conn.cursor()
 cities = ['Groningen, NL','Leeuwarden, NL','Assen, NL','Zwolle, NL','Lelystad, NL','Arnhem, NL','Utrecht, NL','Haarlem, NL','Den Haag, NL','Middelburg, NL','Den Bosch, NL','Maastricht, NL']
 # All the indexes of the cities.
 indexes = [i for i in range(0, len(cities))]
-# Constants for the algorithm.
-AMOUNT_INDIVIDUALS = 30
-AMOUNT_GENERATIONS = 100
 # Get best individual from algorithm.
 best_individual = getBestIndividualFromEA(AMOUNT_INDIVIDUALS, AMOUNT_GENERATIONS)
 # Print status.
