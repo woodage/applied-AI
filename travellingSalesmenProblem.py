@@ -3,6 +3,69 @@ import random
 import urllib.request, json
 import sqlite3
 import copy
+import pygame
+from pygame import *
+
+colors = [(244, 122, 66),(181, 244, 65),(65, 244, 181), (65, 190, 244),(65, 65, 244),(181, 65, 244), (244, 65, 151), (244, 65, 67)]
+color_red = (178, 35, 19)
+class BackgroundGUI(pygame.sprite.Sprite):
+    def __init__(self, image_file, location):
+        pygame.sprite.Sprite.__init__(self)  #call Sprite initializer
+        self.image = pygame.image.load(image_file)
+        self.rect = self.image.get_rect()
+        self.rect.left, self.rect.top = location
+
+class GUI(object):
+
+    def __init__(self):
+        # Initialise PyGame
+        pygame.init()
+        pygame.font.init()
+        self.font = pygame.font.Font('OpenSans-Regular.ttf', 16)
+        #self.screen = pygame.display.set_mode((528, 615))
+        self.screen = pygame.display.set_mode((800, 615))
+        pygame.display.set_caption('Travelling Salesmen Problem.')
+        pygame.mouse.set_visible(True)
+        self.background = BackgroundGUI('kaartNederland.jpg', [0,0])
+        self.screen.blit(self.background.image, self.background.rect)
+        pygame.display.update()
+
+    def displayRoute(self, individual, color, generation_number):
+        self.screen.fill((0,0,0))
+        self.background = BackgroundGUI('kaartNederland.jpg', [0,0])
+        self.screen.blit(self.background.image, self.background.rect)
+        city_location_on_map = {'Groningen, NL': (428, 82),
+                                'Leeuwarden, NL': (328, 88),
+                               'Assen, NL': (426, 124),
+                               'Zwolle, NL': (377, 236),
+                               'Lelystad, NL': (291, 232),
+                               'Arnhem, NL': (351, 342),
+                               'Utrecht, NL': (247, 323),
+                               'Haarlem, NL': (183, 263),
+                               'Den Haag, NL': (137, 324),
+                               'Middelburg, NL': (48, 444),
+                               'Den Bosch, NL': (272, 406),
+                               'Maastricht, NL': (324, 583)}
+
+        # Draw the lines.
+        for i in range(len(individual.getPhenotype())):
+            # Draw line to the previous city.
+            if i != 0:
+                location_previous = city_location_on_map[individual.getPhenotype()[i - 1]]
+                location_current = city_location_on_map[individual.getPhenotype()[i]]
+                pygame.draw.line(self.screen, color, [location_previous[0], location_previous[1]],[location_current[0], location_current[1]], 4)
+
+        # Draw some text.
+        label = self.font.render("GENERATIE : "+ str(generation_number), False, color_red)
+        self.screen.blit(label, (550, 140))
+
+        # Draw some text.
+        label = self.font.render("OPTIMALE ROUTE : km(" + str(int(fitness(individual))) + ")", False, color_red)
+        self.screen.blit(label, (550, 180))
+        for i in range(len(individual.getPhenotype())):
+            label = self.font.render(individual.getPhenotype()[i], False, color)
+            self.screen.blit(label, (550, 200 + (i * 20)))
+        pygame.display.update()
 
 def insert_distance_in_to_database():
     for i in range(len(cities)):
@@ -114,6 +177,10 @@ class Individual(object):
 
 """ Return the best individual from the last generation. """
 def getBestIndividualFromEA(amount_individuals, amount_generations):
+    # Init a gui.
+    gui = GUI()
+    # Start line color for drawing on GUI.
+    lineColor = (0, 0, 0)
     # Generate a random population.
     population = [Individual() for _ in range(0, amount_individuals)]
     # Loop each amount generation.
@@ -125,7 +192,15 @@ def getBestIndividualFromEA(amount_individuals, amount_generations):
         kids = crossover(best_population)
         # Create the new population.
         population = best_population + mutate(kids)[:int(len(population) / 2)]
-        print( min([fitness(individual) for individual in population]))
+        # Calculate the best fitness.
+        bestFitness = min([fitness(individual) for individual in population])
+        # Loop each individual from last generation.
+        for individual in population:
+            # Check if the fitness of the individual matches with the bestFitness.
+            if fitness(individual) == bestFitness:
+                gui.displayRoute(individual, lineColor, current_generation)
+                lineColor = random.choice(colors)
+
     # Calculate the best fitness.
     bestFitness = min([fitness(individual) for individual in population])
     # Loop each individual from last generation.
