@@ -36,5 +36,3 @@ for q in range(0, 2):
         for s in range(0, 2):
             x = [ q ,r, s]
             print(x,  " --> ", predict(x,thetaList))
-
-
